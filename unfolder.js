@@ -2,19 +2,22 @@ var async = require('async');
 
 var createMapper = function (element, parentKey, currentKey, currentPropertyName, properties) {
     var keys;
+    var mapValue;
 
     if (parentKey != null) {
         currentPropertyName = currentPropertyName ? currentPropertyName + '.' + parentKey : parentKey;
     }
 
     if (!(element instanceof Object)) {
-        properties.push(currentPropertyName ? currentPropertyName + '.' + currentKey : currentKey);
+        mapValue=currentPropertyName ? currentPropertyName + '.' + currentKey : currentKey;
+        properties.push({map:mapValue,property:mapValue});
         return;
     }
     keys = Object.keys(element);
 
     if (keys.length === 0) {
-        properties.push(currentPropertyName ? currentPropertyName + '.' + currentKey : currentKey);
+        mapValue=currentPropertyName ? currentPropertyName + '.' + currentKey : currentKey;
+        properties.push({map:mapValue,property:mapValue});
         return;
     }
 
@@ -52,7 +55,7 @@ var mapObject = function (map, element) {
     var propertyMap;
     for (var i = map.length-1; i >= 0; i--) {
         propertyMap = map[i];
-        mappedObject[propertyMap] = getValue(propertyMap, element);
+        mappedObject[propertyMap.map] = getValue(propertyMap.property, element);
     }
     return mappedObject;
 };
@@ -79,12 +82,14 @@ var convertToSimpleObjects = function (map, array) {
  *
 
  * @param {Object[]} elements - objects to unfold
- * @param {Function} callback - Callback that will be executed after unfolding objects.
- * @param {string[]} [propertyMapArray=undefined] - Array of property names that you want to have in unfolded object.
+ * * @param {Object[]} [propertyMapArray=undefined] - Array of {map:newObjectPropertyName, property:currentObjectPropertyName}
+ * values that you want to have in unfolded object.
  * If null, property names will be created using first object properties, joined by dot, e.g 'property.second.third'
  *
+ * @param {Function} callback - Callback that will be executed after unfolding objects.
+
  */
-exports.convertToLinearObjects = function (elements, callback,propertyMapArray) {
+ exports.convertToLinearObjects = function (elements, propertyMapArray,callback) {
     var convertAsync = async.wrapSync(convertToSimpleObjects);
     convertAsync(propertyMapArray, elements, callback);
 };
